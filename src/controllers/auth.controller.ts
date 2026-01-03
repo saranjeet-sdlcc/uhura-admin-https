@@ -10,7 +10,10 @@ export const adminLogin = async (req: Request, res: Response) => {
     const selectedRole = role.toLowerCase();
 
     // 2. Check if role exists in our config
-const validPassword = config.adminCredentials[selectedRole as keyof typeof config.adminCredentials];
+    const validPassword =
+      config.adminCredentials[
+        selectedRole as keyof typeof config.adminCredentials
+      ];
     if (!validPassword) {
       return res.status(400).json({ message: "Invalid role selected" });
     }
@@ -22,9 +25,9 @@ const validPassword = config.adminCredentials[selectedRole as keyof typeof confi
 
     // 4. Generate JWT with the Role embedded
     const token = jwt.sign(
-      { 
-        role: selectedRole, 
-        isAdmin: true // Marker to distinguish from normal app users
+      {
+        role: selectedRole,
+        isAdmin: true, // Marker to distinguish from normal app users
       },
       config.jwtSecret,
       { expiresIn: "24h" }
@@ -35,9 +38,8 @@ const validPassword = config.adminCredentials[selectedRole as keyof typeof confi
       success: true,
       message: `Welcome back, ${role}`,
       token,
-      role: selectedRole
+      role: selectedRole,
     });
-
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: "Internal Server Error" });

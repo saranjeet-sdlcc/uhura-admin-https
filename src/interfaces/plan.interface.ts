@@ -7,7 +7,6 @@ export interface CreatePlanRequest {
   slug: string;
   price: number;
   currency?: string;
-  
   frequency: 'Monthly' | 'Yearly' | 'Lifetime';
   features: string[]; 
 }

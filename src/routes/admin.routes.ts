@@ -1,48 +1,3 @@
-// import { Router } from "express";
-// import { getDashboardStats } from "../controllers/dashboard.controller";
-// import {
-//   getReports,
-//   getUserDetails,
-//   getUserGrowthStats,
-//   getUsers,
-//   updateUserStatus,
-// } from "../controllers/user.controller";
-// import {
-//   createPlan,
-//   getPlans,
-//   updatePlan,
-// } from "../controllers/plan.controller";
-
-// const router = Router();
-
-// router.get("/dashboard", getDashboardStats);
-
-// // for Banning/Unbanning users
-// router.put("/users/:userId/status", updateUserStatus);
-
-// // get all reported users
-// router.get("/reports", getReports);
-
-// // jan-dec users growth
-// router.get("/stats/growth", getUserGrowthStats);
-
-// router.post("/plans", createPlan);
-
-// router.put("/plans/:planId", updatePlan);
-
-// router.get("/plans", getPlans);
-
-// // /admin/users?page=1&limit=10
-// router.get("/users", getUsers);
-
-// // get Single User Details
-// router.get("/users/:userId", getUserDetails);
-
-
-// export default router;
-
-
-
 import { Router } from "express";
 import { adminLogin } from "../controllers/auth.controller"; // Import Login Controller
 import { verifyAdmin, requireRole } from "../middleware/authMiddleware"; // Import Middleware
@@ -59,6 +14,7 @@ import {
   getPlans,
   updatePlan,
 } from "../controllers/plan.controller";
+import { createStaffAccount, deleteStaffAccount, getAllStaff, resetStaffPassword } from "../controllers/staff.controller";
 
 const router = Router();
 
@@ -126,6 +82,38 @@ router.get(
   verifyAdmin,
   requireRole(["owner", "admin", "billing", "readonly"]),
   getPlans
+);
+
+// Create a new staff member
+router.post(
+  "/staff", 
+  verifyAdmin, 
+  requireRole(["owner"]), 
+  createStaffAccount
+);
+
+// Get list of all staff members
+router.get(
+  "/staff", 
+  verifyAdmin, 
+  requireRole(["owner"]), 
+  getAllStaff
+);
+
+// Delete a staff member
+router.delete(
+  "/staff/:id", 
+  verifyAdmin, 
+  requireRole(["owner"]), 
+  deleteStaffAccount
+);
+
+// Update/Reset a staff member's password
+router.patch(
+  "/staff/:id/password", 
+  verifyAdmin, 
+  requireRole(["owner"]), 
+  resetStaffPassword
 );
 
 export default router;
