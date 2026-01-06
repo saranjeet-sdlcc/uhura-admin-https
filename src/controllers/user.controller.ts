@@ -2,8 +2,11 @@ import axios from "axios";
 import { Request, Response } from "express";
 import { config } from "../config/config";
 import { UpdateStatusRequest } from "../interfaces/stats.interface";
+import { AuditLog } from "../models/AuditLog.model";
+import { AuthRequest } from "../middleware/authMiddleware";
+import { logActivity } from "../utils/auditLogger";
 
-export const updateUserStatus = async (req: Request, res: Response) => {
+export const updateUserStatus = async (req: AuthRequest, res: Response) => {
   try {
     const { userId } = req.params;
     const { status, banDurationInDays, reason } =
@@ -17,6 +20,12 @@ export const updateUserStatus = async (req: Request, res: Response) => {
         reason,
       }
     );
+
+    await logActivity(req, "USER_STATUS_UPDATE", userId, {
+      status,
+      reason,
+      banDurationInDays,
+    });
 
     res.status(200).json(response.data);
   } catch (error: any) {
@@ -32,9 +41,12 @@ export const getReports = async (req: Request, res: Response) => {
   try {
     const { page, limit, status } = req.query;
 
-    const response = await axios.get(`${config.services.user}/v1/user/admin/reports`, {
-      params: { page, limit, status },
-    });
+    const response = await axios.get(
+      `${config.services.user}/v1/user/admin/reports`,
+      {
+        params: { page, limit, status },
+      }
+    );
 
     res.status(200).json(response.data);
   } catch (error: any) {
@@ -65,17 +77,14 @@ export const getUserGrowthStats = async (req: Request, res: Response) => {
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
-    // 1. Extract Query Params (page, limit, search) from Frontend request
     const { page, limit, search } = req.query;
 
     const url = `${config.services.user}/v1/user/admin/users`;
-    // const url = `http://localhost:4001/api/v1/user/admin/users`;
 
     const response = await axios.get(url, {
-      params: { page, limit, search }, // Forward params automatically
+      params: { page, limit, search },
     });
 
-    // 3. Return data to Frontend
     res.status(200).json(response.data);
   } catch (error: any) {
     console.error("Error fetching users from User Service:", error.message);
@@ -110,8 +119,6 @@ export const getUserDetails = async (req: Request, res: Response) => {
     }
 
     const userData = userRes.value.data.data;
-
-    // console.log("User userData:", userData);
 
     const totalMessages =
       chatRes.status === "fulfilled" ? chatRes.value.data.totalMessages : 0;

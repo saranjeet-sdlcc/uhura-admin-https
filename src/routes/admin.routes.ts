@@ -14,7 +14,13 @@ import {
   getPlans,
   updatePlan,
 } from "../controllers/plan.controller";
-import { createStaffAccount, deleteStaffAccount, getAllStaff, resetStaffPassword } from "../controllers/staff.controller";
+import {
+  createStaffAccount,
+  deleteStaffAccount,
+  getAllStaff,
+  resetStaffPassword,
+} from "../controllers/staff.controller";
+import { getAuditLogs } from "../controllers/audit.controller";
 
 const router = Router();
 
@@ -85,35 +91,28 @@ router.get(
 );
 
 // Create a new staff member
-router.post(
-  "/staff", 
-  verifyAdmin, 
-  requireRole(["owner"]), 
-  createStaffAccount
-);
+router.post("/staff", verifyAdmin, requireRole(["owner"]), createStaffAccount);
 
 // Get list of all staff members
-router.get(
-  "/staff", 
-  verifyAdmin, 
-  requireRole(["owner"]), 
-  getAllStaff
-);
+router.get("/staff", verifyAdmin, requireRole(["owner"]), getAllStaff);
 
 // Delete a staff member
 router.delete(
-  "/staff/:id", 
-  verifyAdmin, 
-  requireRole(["owner"]), 
+  "/staff/:id",
+  verifyAdmin,
+  requireRole(["owner"]),
   deleteStaffAccount
 );
 
 // Update/Reset a staff member's password
 router.patch(
-  "/staff/:id/password", 
-  verifyAdmin, 
-  requireRole(["owner"]), 
+  "/staff/:id/password",
+  verifyAdmin,
+  requireRole(["owner"]),
   resetStaffPassword
 );
+
+// Activity Monitoring (Owner Only)
+router.get("/logs", verifyAdmin, requireRole(["owner"]), getAuditLogs);
 
 export default router;
