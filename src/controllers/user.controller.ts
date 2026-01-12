@@ -7,14 +7,14 @@ import { AuthRequest } from "../middleware/authMiddleware";
 import { logActivity } from "../utils/auditLogger";
 
 export const updateUserStatus = async (req: AuthRequest, res: Response) => {
-  try {
+  try { 
     const { userId } = req.params;
     const { status, banDurationInDays, reason } =
       req.body as UpdateStatusRequest;
 
     const response = await axios.put(
       `${config.services.user}/v1/user/admin/status/${userId}`,
-      {
+      { 
         status,
         banDurationInDays,
         reason,

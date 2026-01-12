@@ -21,6 +21,8 @@ import {
   resetStaffPassword,
 } from "../controllers/staff.controller";
 import { getAuditLogs } from "../controllers/audit.controller";
+import { SERVICES } from "../config/config";
+import axios from "axios";
 
 const router = Router();
 
@@ -114,5 +116,26 @@ router.patch(
 
 // Activity Monitoring (Owner Only)
 router.get("/logs", verifyAdmin, requireRole(["owner"]), getAuditLogs);
+
+
+
+router.get("/system-health", async (req, res) => {
+  const healthStatuses = await Promise.all(SERVICES.map(async (service) => {
+    try {
+      // Set a short timeout so one slow service doesn't hang the whole dashboard
+      const response = await axios.get(`${service.url}/health-check`, { timeout: 3000 });
+      return { ...response.data, status: 'Online' };
+    } catch (error) {
+      return { 
+        service: service.name, 
+        status: 'Offline', 
+        message: 'Unable to reach service ❌',
+        uptime: '0d 0h 0m 0s'
+      };
+    }
+  }));
+
+  res.json({ success: true, data: healthStatuses });
+});
 
 export default router;

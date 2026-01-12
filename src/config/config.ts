@@ -37,3 +37,13 @@ export const config = {
     readonly: process.env.ADMIN_READONLY_PASS || "readonly123",
   }
 };
+
+
+export const SERVICES = [
+  { name: 'Auth Service', url: "https://uhura-gateaway.azure-api.net/auth" },
+  { name: 'User Service', url: "https://uhura-gateaway.azure-api.net/user" },
+  { name: 'Chat Service', url: "http://165.227.209.124:4002" },
+  { name: 'Call Service', url: "http://157.245.222.207:4009" },
+  { name: 'Notification Service', url: "http://161.35.178.26:4003" },
+  { name: 'Payment Service', url: "http://165.227.209.81:4006" }
+];
