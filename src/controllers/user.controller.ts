@@ -7,14 +7,14 @@ import { AuthRequest } from "../middleware/authMiddleware";
 import { logActivity } from "../utils/auditLogger";
 
 export const updateUserStatus = async (req: AuthRequest, res: Response) => {
-  try { 
+  try {
     const { userId } = req.params;
     const { status, banDurationInDays, reason } =
       req.body as UpdateStatusRequest;
 
     const response = await axios.put(
       `${config.services.user}/v1/user/admin/status/${userId}`,
-      { 
+      {
         status,
         banDurationInDays,
         reason,
@@ -146,5 +146,64 @@ export const getUserDetails = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error("Error aggregating user details:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const purgeUserAccount = async (req: AuthRequest, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { reason } = req.body;
+
+    const response = await axios.delete(
+      `${config.services.user}/v1/user/admin/users/purge/${userId}`
+    );
+
+    console.log("Response getting from permanent delete user: ", response.data);
+
+    // 2. Log the activity for the Audit Monitoring system
+    // This allows the Owner to see who performed this irreversible action
+    await logActivity(req, "USER_PERMANENT_PURGE", userId, {
+      reason: reason || "Administrative Hard Delete",
+      timestamp: new Date().toISOString(),
+    });
+
+    res.status(200).json({
+      success: true,
+      message:
+        response.data.message ||
+        "User account permanently purged from the system.",
+    });
+  } catch (error: any) {
+    console.error("Error during admin user purge:", error.message);
+    res.status(error.response?.status || 500).json({
+      message: "Failed to purge user account",
+      error: error.response?.data,
+    });
+  }
+};
+
+
+export const updateGlobalRetentionPolicy = async (req: AuthRequest, res: Response) => {
+  try {
+    const { retentionDays } = req.body;
+
+    // 1. Forward request to User-Service
+    const response = await axios.put(
+      `${config.services.user}/v1/user/admin/system/retention`,
+      { retentionDays }
+    );
+
+    // 2. Log that the Owner changed the system-wide purge rule
+    await logActivity(req, "GLOBAL_RETENTION_CHANGED", "SYSTEM", {
+      newRetentionDays: retentionDays
+    });
+
+    return res.status(200).json(response.data);
+  } catch (error: any) {
+    console.error("❌ Admin Service Policy Update Error:", error.message);
+    return res.status(error.response?.status || 500).json({
+      message: "Failed to update global retention policy",
+      error: error.response?.data
+    });
   }
 };

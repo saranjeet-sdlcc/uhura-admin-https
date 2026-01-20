@@ -1,12 +1,14 @@
 import { Router } from "express";
-import { adminLogin } from "../controllers/auth.controller"; // Import Login Controller
-import { verifyAdmin, requireRole } from "../middleware/authMiddleware"; // Import Middleware
+import { adminLogin } from "../controllers/auth.controller";
+import { verifyAdmin, requireRole } from "../middleware/authMiddleware";
 import { getDashboardStats } from "../controllers/dashboard.controller";
 import {
   getReports,
   getUserDetails,
   getUserGrowthStats,
   getUsers,
+  purgeUserAccount,
+  updateGlobalRetentionPolicy,
   updateUserStatus,
 } from "../controllers/user.controller";
 import {
@@ -117,23 +119,39 @@ router.patch(
 // Activity Monitoring (Owner Only)
 router.get("/logs", verifyAdmin, requireRole(["owner"]), getAuditLogs);
 
+router.delete(
+  "/users/:userId/purge",
+  verifyAdmin,
+  requireRole(["owner", "admin"]),
+  purgeUserAccount
+);
 
+router.put(
+  "/system/retention",
+  verifyAdmin,
+  requireRole(["owner"]),
+  updateGlobalRetentionPolicy
+);
 
 router.get("/system-health", async (req, res) => {
-  const healthStatuses = await Promise.all(SERVICES.map(async (service) => {
-    try {
-      // Set a short timeout so one slow service doesn't hang the whole dashboard
-      const response = await axios.get(`${service.url}/health-check`, { timeout: 3000 });
-      return { ...response.data, status: 'Online' };
-    } catch (error) {
-      return { 
-        service: service.name, 
-        status: 'Offline', 
-        message: 'Unable to reach service ❌',
-        uptime: '0d 0h 0m 0s'
-      };
-    }
-  }));
+  const healthStatuses = await Promise.all(
+    SERVICES.map(async (service) => {
+      try {
+        // Set a short timeout so one slow service doesn't hang the whole dashboard
+        const response = await axios.get(`${service.url}/health-check`, {
+          timeout: 3000,
+        });
+        return { ...response.data, status: "Online" };
+      } catch (error) {
+        return {
+          service: service.name,
+          status: "Offline",
+          message: "Unable to reach service ❌",
+          uptime: "0d 0h 0m 0s",
+        };
+      }
+    })
+  );
 
   res.json({ success: true, data: healthStatuses });
 });

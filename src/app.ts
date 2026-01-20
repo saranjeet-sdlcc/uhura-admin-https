@@ -1,5 +1,5 @@
-import express, { Application, Request, Response } from "express";
 import cors from "cors";
+import express, { Application } from "express";
 import adminRoutes from "./routes/admin.routes";
 
 const app: Application = express();
