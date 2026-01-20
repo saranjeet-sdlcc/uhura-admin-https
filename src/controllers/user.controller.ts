@@ -13,7 +13,7 @@ export const updateUserStatus = async (req: AuthRequest, res: Response) => {
       req.body as UpdateStatusRequest;
 
     const response = await axios.put(
-      `${config.services.user}/v1/user/admin/status/${userId}`,
+      `${config.services.user}/admin/status/${userId}`,
       {
         status,
         banDurationInDays,
@@ -42,7 +42,7 @@ export const getReports = async (req: Request, res: Response) => {
     const { page, limit, status } = req.query;
 
     const response = await axios.get(
-      `${config.services.user}/v1/user/admin/reports`,
+      `${config.services.user}/admin/reports`,
       {
         params: { page, limit, status },
       }
@@ -79,7 +79,7 @@ export const getUsers = async (req: Request, res: Response) => {
   try {
     const { page, limit, search } = req.query;
 
-    const url = `${config.services.user}/v1/user/admin/users`;
+    const url = `${config.services.user}/admin/users`;
 
     const response = await axios.get(url, {
       params: { page, limit, search },
@@ -98,7 +98,7 @@ export const getUserDetails = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
 
-    const userUrl = `${config.services.user}/v1/user/admin/users/${userId}`;
+    const userUrl = `${config.services.user}/admin/users/${userId}`;
 
     // TODO: Check Chat and Call Service URLs
     const chatUrl = `${config.services.chat}/stats/user/${userId}`;
@@ -155,7 +155,7 @@ export const purgeUserAccount = async (req: AuthRequest, res: Response) => {
     const { reason } = req.body;
 
     const response = await axios.delete(
-      `${config.services.user}/v1/user/admin/users/purge/${userId}`
+      `${config.services.user}/admin/users/purge/${userId}`
     );
 
     console.log("Response getting from permanent delete user: ", response.data);
@@ -189,7 +189,7 @@ export const updateGlobalRetentionPolicy = async (req: AuthRequest, res: Respons
 
     // 1. Forward request to User-Service
     const response = await axios.put(
-      `${config.services.user}/v1/user/admin/system/retention`,
+      `${config.services.user}/admin/system/retention`,
       { retentionDays }
     );
 
