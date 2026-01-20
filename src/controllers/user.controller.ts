@@ -13,12 +13,12 @@ export const updateUserStatus = async (req: AuthRequest, res: Response) => {
       req.body as UpdateStatusRequest;
 
     const response = await axios.put(
-      `${config.services.user}/admin/status/${userId}`,
+      `${config.services.user}/v1/user/admin/status/${userId}`,
       {
         status,
         banDurationInDays,
         reason,
-      }
+      },
     );
 
     await logActivity(req, "USER_STATUS_UPDATE", userId, {
@@ -42,10 +42,10 @@ export const getReports = async (req: Request, res: Response) => {
     const { page, limit, status } = req.query;
 
     const response = await axios.get(
-      `${config.services.user}/admin/reports`,
+      `${config.services.user}/v1/user/admin/reports`,
       {
         params: { page, limit, status },
-      }
+      },
     );
 
     res.status(200).json(response.data);
@@ -79,7 +79,7 @@ export const getUsers = async (req: Request, res: Response) => {
   try {
     const { page, limit, search } = req.query;
 
-    const url = `${config.services.user}/admin/users`;
+    const url = `${config.services.user}/v1/user/admin/users`;
 
     const response = await axios.get(url, {
       params: { page, limit, search },
@@ -98,7 +98,7 @@ export const getUserDetails = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
 
-    const userUrl = `${config.services.user}/admin/users/${userId}`;
+    const userUrl = `${config.services.user}/v1/user/admin/users/${userId}`;
 
     // TODO: Check Chat and Call Service URLs
     const chatUrl = `${config.services.chat}/stats/user/${userId}`;
@@ -155,10 +155,10 @@ export const purgeUserAccount = async (req: AuthRequest, res: Response) => {
     const { reason } = req.body;
 
     const response = await axios.delete(
-      `${config.services.user}/admin/users/purge/${userId}`
+      `${config.services.user}/v1/user/admin/users/purge/${userId}`,
     );
 
-    console.log("Response getting from permanent delete user: ", response.data);
+    console.log("Response getting from permanent delete user ==>   ", response.data);
 
     // 2. Log the activity for the Audit Monitoring system
     // This allows the Owner to see who performed this irreversible action
@@ -182,20 +182,20 @@ export const purgeUserAccount = async (req: AuthRequest, res: Response) => {
   }
 };
 
-
-export const updateGlobalRetentionPolicy = async (req: AuthRequest, res: Response) => {
+export const updateGlobalRetentionPolicy = async (
+  req: AuthRequest,
+  res: Response,
+) => {
   try {
     const { retentionDays } = req.body;
 
-    // 1. Forward request to User-Service
     const response = await axios.put(
-      `${config.services.user}/admin/system/retention`,
-      { retentionDays }
+      `${config.services.user}/v1/user/admin/settings/retention`,
+      { retentionDays },
     );
 
-    // 2. Log that the Owner changed the system-wide purge rule
     await logActivity(req, "GLOBAL_RETENTION_CHANGED", "SYSTEM", {
-      newRetentionDays: retentionDays
+      newRetentionDays: retentionDays,
     });
 
     return res.status(200).json(response.data);
@@ -203,7 +203,7 @@ export const updateGlobalRetentionPolicy = async (req: AuthRequest, res: Respons
     console.error("❌ Admin Service Policy Update Error:", error.message);
     return res.status(error.response?.status || 500).json({
       message: "Failed to update global retention policy",
-      error: error.response?.data
+      error: error.response?.data,
     });
   }
 };
