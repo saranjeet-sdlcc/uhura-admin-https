@@ -3,12 +3,14 @@ import { adminLogin } from "../controllers/auth.controller";
 import { verifyAdmin, requireRole } from "../middleware/authMiddleware";
 import { getDashboardStats } from "../controllers/dashboard.controller";
 import {
+  getRecentActivities,
   getReports,
   getUserDetails,
   getUserGrowthStats,
   getUsers,
   purgeUserAccount,
   updateGlobalRetentionPolicy,
+  updateReportStatus,
   updateUserStatus,
 } from "../controllers/user.controller";
 import {
@@ -50,7 +52,7 @@ router.put(
   "/users/:userId/status",
   verifyAdmin,
   requireRole(["owner", "admin", "service"]),
-  updateUserStatus
+  updateUserStatus,
 );
 
 // 3. Analytics (User Growth)
@@ -63,8 +65,19 @@ router.get(
   "/reports",
   verifyAdmin,
   requireRole(["owner", "admin", "service", "readonly"]),
-  getReports
+  getReports,
 );
+
+
+router.put(
+  "/reports/:reportId/status",
+  verifyAdmin,
+  requireRole(["owner", "admin", "service"]),
+  // You will need to create this controller next
+  updateReportStatus 
+);
+
+
 
 // 5. Billing Management (Plans)
 // Create Plan
@@ -73,7 +86,7 @@ router.post(
   "/plans",
   verifyAdmin,
   requireRole(["owner", "billing"]),
-  createPlan
+  createPlan,
 );
 
 // Update Plan
@@ -82,7 +95,7 @@ router.put(
   "/plans/:planId",
   verifyAdmin,
   requireRole(["owner", "billing"]),
-  updatePlan
+  updatePlan,
 );
 
 // Get Plans
@@ -91,7 +104,7 @@ router.get(
   "/plans",
   verifyAdmin,
   requireRole(["owner", "admin", "billing", "readonly"]),
-  getPlans
+  getPlans,
 );
 
 // Create a new staff member
@@ -105,7 +118,7 @@ router.delete(
   "/staff/:id",
   verifyAdmin,
   requireRole(["owner"]),
-  deleteStaffAccount
+  deleteStaffAccount,
 );
 
 // Update/Reset a staff member's password
@@ -113,7 +126,7 @@ router.patch(
   "/staff/:id/password",
   verifyAdmin,
   requireRole(["owner"]),
-  resetStaffPassword
+  resetStaffPassword,
 );
 
 // Activity Monitoring (Owner Only)
@@ -123,14 +136,21 @@ router.delete(
   "/users/:userId/purge",
   verifyAdmin,
   requireRole(["owner", "admin"]),
-  purgeUserAccount
+  purgeUserAccount,
 );
 
 router.put(
   "/system/retention",
   verifyAdmin,
   requireRole(["owner"]),
-  updateGlobalRetentionPolicy
+  updateGlobalRetentionPolicy,
+);
+
+router.get(
+  "/activities/recent",
+  verifyAdmin,
+  requireRole(["owner", "admin", "service", "readonly"]),
+  getRecentActivities,
 );
 
 router.get("/system-health", async (req, res) => {
@@ -150,7 +170,7 @@ router.get("/system-health", async (req, res) => {
           uptime: "0d 0h 0m 0s",
         };
       }
-    })
+    }),
   );
 
   res.json({ success: true, data: healthStatuses });

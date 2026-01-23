@@ -2,7 +2,6 @@ import axios from "axios";
 import { Request, Response } from "express";
 import { config } from "../config/config";
 import { UpdateStatusRequest } from "../interfaces/stats.interface";
-import { AuditLog } from "../models/AuditLog.model";
 import { AuthRequest } from "../middleware/authMiddleware";
 import { logActivity } from "../utils/auditLogger";
 
@@ -37,6 +36,30 @@ export const updateUserStatus = async (req: AuthRequest, res: Response) => {
   }
 };
 
+
+export const updateReportStatus = async (req: AuthRequest, res: Response) => {
+  try {
+    const { reportId } = req.params;
+    const { status, actionTaken, performedBy } = req.body;
+
+    // 🚀 Forwarding to User-Service on port 8000
+    const response = await axios.put(
+      `${config.services.user}/v1/user/admin/reports/${reportId}/status`,
+      { status, actionTaken, performedBy }
+    );
+
+    res.status(200).json(response.data);
+  } catch (error: any) {
+    console.error("Error proxying report status update:", error.message);
+    res.status(error.response?.status || 500).json({
+      success: false,
+      message: "Failed to update report status",
+      error: error.response?.data,
+    });
+  }
+};
+
+
 export const getReports = async (req: Request, res: Response) => {
   try {
     const { page, limit, status } = req.query;
@@ -55,6 +78,22 @@ export const getReports = async (req: Request, res: Response) => {
       message: "Failed to fetch reports",
       error: error.response?.data,
     });
+  }
+};
+
+export const resolveReport = async (req: AuthRequest, res: Response) => {
+  try {
+    const { reportId } = req.params;
+    const { status, actionTaken, performedBy } = req.body;
+
+    const response = await axios.put(
+      `${config.services.user}/v1/user/admin/reports/${reportId}/status`,
+      { status, actionTaken, performedBy }
+    );
+
+    res.status(200).json(response.data);
+  } catch (error: any) {
+    res.status(500).json({ message: "Failed to resolve report" });
   }
 };
 
@@ -189,20 +228,50 @@ export const updateGlobalRetentionPolicy = async (
   try {
     const { retentionDays } = req.body;
 
-    const response = await axios.put(
-      `${config.services.user}/v1/user/admin/settings/retention`,
-      { retentionDays },
-    );
+    console.log("Running inside the retention controller !");
+    
 
+    const response = await axios.put(
+      `${config.services.user}/v1/user/admin/system/retention`,
+      { retentionDays },
+
+    );
     await logActivity(req, "GLOBAL_RETENTION_CHANGED", "SYSTEM", {
       newRetentionDays: retentionDays,
     });
+
+
+
+    console.log("Response from retention -->", response.data);
+    
+
+
 
     return res.status(200).json(response.data);
   } catch (error: any) {
     console.error("❌ Admin Service Policy Update Error:", error.message);
     return res.status(error.response?.status || 500).json({
       message: "Failed to update global retention policy",
+      error: error.response?.data,
+    });
+  }
+};
+
+
+
+export const getRecentActivities = async (req: Request, res: Response) => {
+  try {
+    const response = await axios.get(
+      `${config.services.user}/v1/user/admin/recent-activities`
+    );
+
+    // Return the data directly to your frontend
+    res.status(200).json(response.data);
+  } catch (error: any) {
+    console.error("Error fetching recent activities:", error.message);
+    res.status(error.response?.status || 500).json({
+      success: false,
+      message: "Failed to fetch recent activities",
       error: error.response?.data,
     });
   }
